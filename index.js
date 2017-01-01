@@ -12,7 +12,10 @@ const Path = require('path');
 const Argvs = require('yargs').argv;
 const Glob = require('glob');
 const Chalk = require('chalk');
+const Prompt = require('prompt');
+const Rimraf = require('rimraf');
 
+const ImageReg = '/**/*.@(jpg|jpeg|png|bmp|gif|JPG|JPEG|PNG|BMP|GIF)';
 const LocalTmp = Path.resolve(__dirname, './tmp_flatten/');
 if (!FS.existsSync(LocalTmp)) {
   FS.mkdirSync(LocalTmp);
@@ -21,11 +24,31 @@ if (!FS.existsSync(LocalTmp)) {
 const TargetFolder = Argvs.to ? Path.resolve(Argvs.to) : Path.resolve(LocalTmp, new Date().valueOf().toString());
 const SourceFolder = Argvs.from ? Path.resolve(Argvs.from) : Path.resolve('./');
 
-if (!FS.existsSync(TargetFolder)) {
-  FS.mkdirSync(TargetFolder);
-} else {
-  console.warn(Chalk.bold.yellow('[WARN] Target Folder already exists. Please confirm if it\'s OK to overwrite it.'));
-  return;
+function prepare() {
+  return new Promise((resolve, reject) => {
+    if (!FS.existsSync(TargetFolder)) {
+      FS.mkdirSync(TargetFolder);
+    } else {
+      console.warn(Chalk.bold.yellow('[WARN] Target Folder already exists. Please confirm if it\'s OK to overwrite it.'));
+      Prompt.start();
+      Prompt.message = '';
+      Prompt.get({
+        name: 'yesno',
+        message: 'Overwrite?',
+        validator: /y[es]*|n[o]?/,
+        warning: 'Must respond with yes or no',
+        default: 'yes',
+      }, (err, result) => {
+        if (result.yesno === 'no') {
+          reject();
+        } else {
+          Rimraf.sync(TargetFolder);
+          FS.mkdirSync(TargetFolder);
+          resolve();
+        }
+      });
+    }
+  });
 }
 
 function _getLegalTargeName(from, to) {
@@ -57,32 +80,42 @@ function _cp(from, to) {
   });
 }
 
-console.time('[Total Time Cost]');
-console.log(Chalk.green('Start reading files from ' + Argvs.from));
-console.log(Chalk.green('...'));
+prepare()
+.then(() => {
+  console.time('[Total Time Cost]');
+  console.log(Chalk.green('Start reading files from ' + Argvs.from));
+  console.log(Chalk.green('...'));
 
-const imageReg = '/**/*.@(jpg|jpeg|png|bmp|gif|JPG|JPEG|PNG|BMP|GIF)';
-Glob(SourceFolder + imageReg, (err, files) => {
-  if (err) {
-    console.error(Chalk.red(err.message));
-    return;
-  }
-  if (!files.length) {
-    console.warn(Chalk.yellow('No image in folder ' + SourceFolder));
-  }
+  Glob(SourceFolder + ImageReg, (err, files) => {
+    if (err) {
+      console.error(Chalk.red(err.message));
+      return;
+    }
+    if (!files.length) {
+      console.warn(Chalk.bold.yellow('[WARN] No image in folder ' + SourceFolder));
+    }
 
-  const tasks = files.map(filePath => _cp(filePath, TargetFolder));
+    const tasks = files.map(filePath => _cp(filePath, TargetFolder));
 
-  Promise.all(tasks)
-  .then(() => {
-    console.log(Chalk.green('Finish ' + files.length + ' files copy!'));
-    console.log(Chalk.green('Check them in ' + TargetFolder));
-    console.timeEnd('[Total Time Cost]');
-  })
-  .catch(err => {
-    console.error(Chalk.red('Error happens when copy file: ' + err.message));
+    Promise.all(tasks)
+    .then(() => {
+      console.log(Chalk.green('Finish ' + files.length + ' files copy!'));
+      console.log(Chalk.green('Check them in ' + TargetFolder));
+      console.timeEnd('[Total Time Cost]');
+    })
+    .catch(err => {
+      console.error(Chalk.red('Error happens when copy file: ' + err.message));
+    });
   });
+})
+.catch((err) => {
+  if (err) {
+    console.error(Chalk.red('Error happens: ' + err.message));
+  } else {
+    console.info(Chalk.green('Exit...'));
+  }
 });
+
 
 // walking a folder for leaf files recursively
 // function walk(path) {
