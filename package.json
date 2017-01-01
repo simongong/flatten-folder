@@ -1,0 +1,33 @@
+{
+  "name": "flatten-folder",
+  "version": "1.0.0",
+  "description": "Flatten a folder. Extract all leaf files of a source folder into a target folder.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simongong/flatten-folder.git"
+  },
+  "keywords": [
+    "flatten",
+    "folder"
+  ],
+  "author": "Simon.Gong",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/simongong/flatten-folder/issues"
+  },
+  "homepage": "https://github.com/simongong/flatten-folder#readme",
+  "dependencies": {
+    "chalk": "^1.1.3",
+    "glob": "^7.1.1",
+    "yargs": "^6.6.0"
+  },
+  "devDependencies": {
+    "eslint": "^3.12.2"
+  },
+  "private": true
+}
