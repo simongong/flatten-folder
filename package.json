@@ -1,7 +1,7 @@
 {
   "name": "flatten-folder",
   "version": "1.0.0",
-  "description": "Flatten a folder. Extract all leaf files of a source folder into a target folder.",
+  "description": "Flatten a folder with specified file type.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
