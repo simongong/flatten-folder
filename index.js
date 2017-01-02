@@ -83,6 +83,10 @@ prepare()
 
 function prepare() {
   return new Promise((resolve, reject) => {
+    if (Argvs.default) {  // use default for all, no need prompt
+      resolve();
+      return;
+    }
     Prompt.start();
     Prompt.message = '';  // remove the default 'prompt' in front
     let schema = {
